@@ -63,8 +63,13 @@ app.post("/urls", (req, res) => {
   urlDatabase[shortURL] = longURL
   res.redirect(`/urls/${shortURL}`)
 
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");   
+  // console.log(req.body);  // Log the POST request body to the console
+  // res.send("Ok");   
+});
+app.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL
+  const longURL = urlDatabase[shortURL]
+  res.redirect(longURL);
 });
 
 app.listen(PORT, () => {
