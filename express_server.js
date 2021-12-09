@@ -58,8 +58,13 @@ const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[ req.
 });
 
 app.post("/urls", (req, res) => {
+  const shortURL = generateRandomString(6)
+  const longURL = req.body.longURL
+  urlDatabase[shortURL] = longURL
+  res.redirect(`/urls/${shortURL}`)
+
   console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond w/ ith 'Ok' (we will replace this)
+  res.send("Ok");   
 });
 
 app.listen(PORT, () => {
