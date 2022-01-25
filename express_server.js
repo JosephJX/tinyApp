@@ -1,12 +1,19 @@
 const express = require("express");
 const app = express();
 const PORT = 8080;
-
 app.set("view engine", "ejs");
 
+
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser")
 const req = require("express/lib/request");
+
+app.use(cookieParser())
+
+
 app.use(bodyParser.urlencoded({ extended: true }));
+
+
 
 function generateRandomString() {
 
