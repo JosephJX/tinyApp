@@ -1,27 +1,28 @@
 const express = require("express");
 const app = express();
-const PORT = 8081;
+const PORT = 8080;
 
 app.set("view engine", "ejs");
 
 const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
+const req = require("express/lib/request");
+app.use(bodyParser.urlencoded({ extended: true }));
 
 function generateRandomString() {
-  
-const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-function generateString(length) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  function generateString(length) {
     let result = ' ';
     const charactersLength = characters.length;
-    for ( let i = 0; i < length; i++ ) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
 
     return result;
-}
+  }
 
-return generateString(6)
+  return generateString(6)
 }
 
 console.log(generateRandomString())
@@ -53,7 +54,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[ req.params.shortURL ] };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
 });
 
@@ -66,6 +67,20 @@ app.post("/urls", (req, res) => {
   // console.log(req.body);  // Log the POST request body to the console
   // res.send("Ok");   
 });
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const shortURL = req.params.shortURL
+  delete urlDatabase[shortURL]
+  res.redirect("/urls")
+});
+
+app.post("/urls/:id", (req, res) => {
+  const shortURL = req.params.id
+  const longURL = req.body.longURL
+  urlDatabase[shortURL] = longURL
+  res.redirect("/urls")
+});
+
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL
   const longURL = urlDatabase[shortURL]
@@ -75,3 +90,4 @@ app.get("/u/:shortURL", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
