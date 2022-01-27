@@ -67,20 +67,31 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const username = req.cookies["username"]
-  const templateVars = { username, urls: urlDatabase };
+  // const username = req.cookies["user_ID"]
+  let templateVars = {
+    user: users[req.cookies["user_id"]],
+    urls: urlDatabase
+  };
+
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  const username = req.cookies["username"]
-  const templateVars = { username };
+  // const username = req.cookies["username"]
+  let templateVars = {
+    user: users[req.cookies["user_id"]]
+  };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const username = req.cookies["username"]
-  const templateVars = { username, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  // const username = req.cookies["username"]
+  let templateVars = {
+    // username, 
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+    user: users[req.cookies["user_id"]],
+  };
 
   res.render("urls_show", templateVars);
 });
@@ -112,7 +123,7 @@ app.post("/urls/:id", (req, res) => {
 
 app.get("/register", (req, res) => {
   let templateVars = {
-    username: req.cookies["username"]
+    user: users[req.cookies["username"]],
   };
   res.render("urls_registration", templateVars)
 });
@@ -120,14 +131,6 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const submittedEmail = req.body.email;
   const submittedPassword = req.body.password;
-
-  if (!submittedEmail || !submittedPassword) {
-    res.send(400, "Please include both a valid email and password");
-  };
-
-  if (userAlreadyExists(submittedEmail)) {
-    res.send(400, "An account already exists for this email address");
-  };
 
   const newUserID = generateRandomString();
   users[newUserID] = {
