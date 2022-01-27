@@ -34,10 +34,25 @@ function generateRandomString() {
 
 console.log(generateRandomString())
 
+//object with the short and long URLs
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+// object with all the users data
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+}
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -100,6 +115,28 @@ app.get("/register", (req, res) => {
     username: req.cookies["username"]
   };
   res.render("urls_registration", templateVars)
+});
+
+app.post("/register", (req, res) => {
+  const submittedEmail = req.body.email;
+  const submittedPassword = req.body.password;
+
+  if (!submittedEmail || !submittedPassword) {
+    res.send(400, "Please include both a valid email and password");
+  };
+
+  if (userAlreadyExists(submittedEmail)) {
+    res.send(400, "An account already exists for this email address");
+  };
+
+  const newUserID = generateRandomString();
+  users[newUserID] = {
+    id: newUserID,
+    email: submittedEmail,
+    password: submittedPassword
+  };
+  res.cookie('user_id', newUserID);
+  res.redirect("/urls");
 });
 
 app.post("/login", (req, res) => {
