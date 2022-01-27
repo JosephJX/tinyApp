@@ -34,6 +34,14 @@ function generateRandomString() {
 
 console.log(generateRandomString())
 
+const userAlreadyExists = (email) => {
+  for (const user in users) {
+    if (users[user].email === email) {
+      return true
+    }
+  } return false;
+};
+
 //object with the short and long URLs
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -131,6 +139,14 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const submittedEmail = req.body.email;
   const submittedPassword = req.body.password;
+
+  if (!submittedEmail || !submittedPassword) {
+    res.send(400, "Please include both a valid email and password");
+  };
+
+  if (userAlreadyExists(submittedEmail)) {
+    res.send(400, "An account already exists for this email address");
+  };
 
   const newUserID = generateRandomString();
   users[newUserID] = {
