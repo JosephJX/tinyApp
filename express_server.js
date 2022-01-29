@@ -1,11 +1,11 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
+const bcrypt = require("bcrypt");
 const req = require("express/lib/request");
 const { use } = require("express/lib/application");
 const app = express();
 const PORT = 8080;
-const bcrypt = require("bcrypt");
 
 const { generateRandomString, emailHasUser, userIdFromEmail, urlsForUser, cookieHasUser } = require("./helpers");
 
@@ -24,61 +24,9 @@ app.use(cookieSession({
   keys: ["Joseph"],
   maxAge: 24 * 60 * 60 * 1000,
 }));
-// const generateRandomString = () => {
 
-//   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+// ROUTES
 
-//   function generateString(length) {
-//     let result = ' ';
-//     const charactersLength = characters.length;
-//     for (let i = 0; i < length; i++) {
-//       result += characters.charAt(Math.floor(Math.random() * charactersLength));
-//     }
-//     return result;
-//   }
-//   return generateString(6)
-// }
-
-// console.log(generateRandomString())
-
-// // checks if email matches a user in the database
-// const emailHasUser = (email, userDatabase) => {
-//   for (const user in userDatabase) {
-//     if (userDatabase[user].email === email) {
-//       return true;
-//     }
-//   }
-//   return false;
-// };
-
-// // takes an email and checks the database, returns the corresponding user id
-// const userIdFromEmail = (email, userDatabase) => {
-//   for (const user in userDatabase) {
-//     if (userDatabase[user].email === email) {
-//       return userDatabase[user].id;
-//     }
-//   }
-// };
-
-// // returns an object of shorturls specfic to the given user id
-// const urlsForUser = (id, urlDatabase) => {
-//   const userUrls = {};
-//   for (const shortURL in urlDatabase) {
-//     if (urlDatabase[shortURL].userID === id) {
-//       userUrls[shortURL] = urlDatabase[shortURL];
-//     }
-//   }
-//   return userUrls;
-// };
-
-// //checks if current cookie matches user in Database
-// const cookieHasUser = function (cookie, userDatabase) {
-//   for (const user in userDatabase) {
-//     if (cookie === user) {
-//       return true;
-//     }
-//   } return false;
-// }
 app.get("/", (req, res) => {
   res.send("Hello!");
   if (cookieHasUser(req.session.user_id, users)) {
@@ -88,10 +36,6 @@ app.get("/", (req, res) => {
   }
 });
 
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
-
 app.get("/urls", (req, res) => {
   let templateVars = {
     user: users[req.session["user_id"]],
@@ -99,9 +43,6 @@ app.get("/urls", (req, res) => {
   };
   res.render("urls_index", templateVars);
 });
-
-// if user is logged in, they will see a rendered HTML template of urls_new.ejs
-// if not, the will be redirected back to the login page
 
 app.get("/urls/new", (req, res) => {
   if (!cookieHasUser(req.session.user_id, users)) {
@@ -111,6 +52,28 @@ app.get("/urls/new", (req, res) => {
       user: users[req.session["user_id"]]
     };
     res.render("urls_new", templateVars);
+  }
+});
+
+app.get("/register", (req, res) => {
+  if (cookieHasUser(req.session.user_id, users)) {
+    res.redirect("/urls");
+  } else {
+    let templateVars = {
+      user: users[req.session.user_id],
+    };
+    res.render("urls_registration", templateVars);
+  }
+});
+
+app.get("/login", (req, res) => {
+  if (cookieHasUser(req.session.user_id, users)) {
+    res.redirect("/urls");
+  } else {
+    let templateVars = {
+      user: users[req.session.user_id],
+    };
+    res.render("urls_login", templateVars);
   }
 });
 
@@ -141,18 +104,9 @@ app.get("/u/:shortURL", (req, res) => {
   }
 });
 
-// use this template for registration form 
 
-app.get("/register", (req, res) => {
-  if (cookieHasUser(req.session.user_id, users)) {
-    res.redirect("/urls");
-  } else {
-    let templateVars = {
-      user: users[req.session.user_id],
-    };
-    res.render("urls_registration", templateVars);
-  }
-});
+
+
 
 app.post("/urls", (req, res) => {
   if (req.session.user_id) {
@@ -191,8 +145,6 @@ app.post("/urls/:id", (req, res) => {
   }
 });
 
-
-
 app.post("/register", (req, res) => {
   const submittedEmail = req.body.email;
   const submittedPassword = req.body.password;
@@ -210,17 +162,6 @@ app.post("/register", (req, res) => {
     };
     res.session('user_id', newUserID);
     res.redirect("/urls");
-  }
-});
-
-app.get("/login", (req, res) => {
-  if (cookieHasUser(req.session.user_id, users)) {
-    res.redirect("/urls");
-  } else {
-    let templateVars = {
-      user: users[req.session.user_id],
-    };
-    res.render("urls_login", templateVars);
   }
 });
 
@@ -244,12 +185,6 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/urls");
-});
-
-app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL
-  const longURL = urlDatabase[shortURL]
-  res.redirect(longURL);
 });
 
 app.listen(PORT, () => {
