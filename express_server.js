@@ -63,7 +63,7 @@ const urlsForUser = (id) => {
 
 //object with the short and long URLs
 const urlDatabase = {
-  // "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID" },
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID" },
   // "9sm5xK": { longURL: "http://www.google.com", userID: "userRandomID" },
 };
 
@@ -123,25 +123,30 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  // const username = req.cookies["username"]
-  let templateVars = {
-    // username, 
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL,
-    urlUserID: urlDatabase[req.params.shortURL].userID,
-    user: users[req.session["user_id"]],
-  };
-  console.log(templateVars);
-  res.render("urls_show", templateVars);
+  if (urlDatabase[req.params.shortURL]) {
+    let templateVars = {
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL].longURL,
+      urlUserID: urlDatabase[req.params.shortURL].userID,
+      user: users[req.session.user_id],
+    };
+    res.render("urls_show", templateVars);
+  } else {
+    res.status(404).send("The short URL you entered does not correspond with a long URL at this time.")
+  }
 });
 
 app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString(6)
-  urlDatabase[shortURL] = {
-    longURL: req.body.longURL,
-    userID: req.session["user_id"],
-  };
-  res.redirect(`/urls/${shortURL}`)
+  if (req.session.user_id) {
+    const shortURL = generateRandomString();
+    urlDatabase[shortURL] = {
+      longURL: req.body.longURL,
+      userID: req.session.user_id,
+    };
+    res.redirect(`/urls/${shortURL}`);
+  } else {
+    res.status(401).send("You must be logged in to a valid account to create short URLs.")
+  }
   // console.log(req.body);  // Log the POST request body to the console
   // res.send("Ok");   
 });
@@ -157,7 +162,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     delete urlDatabase[shortURL];
     res.redirect('/urls');
   } else {
-    res.status(401);
+    res.status(401).send("You do not have authorization to delete this short URL.");
   }
 });
 
@@ -173,26 +178,34 @@ app.post("/urls/:id", (req, res) => {
     urlDatabase[shortURL].longURL = req.body.newURL;
     res.redirect('/urls');
   } else {
-    res.status(401);
+    res.status(401).send("You do not have authorization to edit this short URL.");
   }
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
-  if (longURL === undefined) {
-    res.status(302);
+  if (urlDatabase[req.params.shortURL]) {
+    const longURL = urlDatabase[req.params.shortURL].longURL;
+    if (longURL === undefined) {
+      res.status(302);
+    } else {
+      res.redirect(longURL)
+    }
   } else {
-    res.redirect(longURL);
+    res.status(404).send("The short URL are trying to access does not correspond with a long URL at this time.")
   }
 });
 
 // use this template for registration form 
 
 app.get("/register", (req, res) => {
-  let templateVars = {
-    user: users[req.session["user_id"]],
-  };
-  res.render("urls_registration", templateVars)
+  if (req.session.user_id) {
+    res.redirect("/urls");
+  } else {
+    let templateVars = {
+      user: users[req.session.user_id],
+    };
+    res.render("urls_registration", templateVars);
+  }
 });
 
 app.post("/register", (req, res) => {
@@ -218,10 +231,14 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  let templateVars = {
-    user: users[req.session["user_id"]],
-  };
-  res.render("urls_login", templateVars);
+  if (req.session.user_id) {
+    res.redirect("/urls");
+  } else {
+    let templateVars = {
+      user: users[req.session.user_id],
+    };
+    res.render("urls_login", templateVars);
+  }
 });
 
 app.post("/login", (req, res) => {
