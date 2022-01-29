@@ -41,11 +41,14 @@
             <td><%= url %></td>
             <td><%= urls[url].longURL %></td>
             <td>
-              <a
-                class="btn border border-primary text-primary"
-                href="/urls/<%= url %>"
-                >Edit</a
-              >
+              <a href="/urls/<%= url %>">
+                <button
+                  type="button"
+                  class="btn border border-primary text-primary"
+                >
+                  Edit
+                </button>
+              </a>
             </td>
             <td>
               <form method="POST" action="/urls/<%= url %>/delete">
@@ -58,9 +61,14 @@
               </form>
             </td>
           </tr>
-          <% } %> <% } %>
+          <% } %> <% } %> <% } %> <% } %>
         </tbody>
       </table>
+      <% if (user) { %>
+      <div class="alert alert-info" role="alert">
+        Create a <a href="/urls/new" class="alert-info"><b>New Short URL</b></a>
+      </div>
+      <% } %>
     </main>
     <!-- Bootstrap JS -->
     <script
