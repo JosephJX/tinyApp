@@ -55,8 +55,8 @@ const emailAlreadyExists = function (email) {
 
 //object with the short and long URLs
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID" },
+  "9sm5xK": { longURL: "http://www.google.com", userID: "userRandomID" },
 };
 
 // object with all the users data
@@ -77,9 +77,9 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
+// app.get("/urls.json", (req, res) => {
+//   res.json(urlDatabase);
+// });
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
@@ -95,12 +95,18 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+// if user is logged in, they will see a rendered HTML template of urls_new.ejs
+// if not, the will be redirected back to the login page
+
 app.get("/urls/new", (req, res) => {
   // const username = req.cookies["username"]
   let templateVars = {
     user: users[req.cookies["user_id"]]
-  };
-  res.render("urls_new", templateVars);
+  }; if (!req.cookies["user_id"]) {
+    res.redirect("/login");
+  } else {
+    res.render("urls_new", templateVars);
+  }
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -108,7 +114,7 @@ app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
     // username, 
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
+    longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.cookies["user_id"]],
   };
 
@@ -117,10 +123,11 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString(6)
-  const longURL = req.body.longURL
-  urlDatabase[shortURL] = longURL
+  urlDatabase[shortURL] = {
+    longURL: req.body.longURL,
+    userID: req.cookies["user_id"],
+  };
   res.redirect(`/urls/${shortURL}`)
-
   // console.log(req.body);  // Log the POST request body to the console
   // res.send("Ok");   
 });
@@ -136,6 +143,15 @@ app.post("/urls/:id", (req, res) => {
   const longURL = req.body.longURL
   urlDatabase[shortURL] = longURL
   res.redirect("/urls")
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL].longURL;
+  if (longURL === undefined) {
+    res.send(302);
+  } else {
+    res.redirect(longURL);
+  }
 });
 
 // use this template for registration form 
