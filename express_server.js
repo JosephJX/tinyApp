@@ -42,7 +42,7 @@ const userAlreadyExists = (email) => {
   } return false;
 };
 
-const emailAlreadyExists = function (email) {
+const emailAlreadyExists = (email) => {
   for (const user in users) {
     if (users[user].email === email) {
       return true
@@ -50,6 +50,16 @@ const emailAlreadyExists = function (email) {
     }
   } return false;
 }
+
+const urlsForUser = (id) => {
+  const userUrls = {};
+  for (const shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === id) {
+      userUrls[shortURL] = urlDatabase[shortURL];
+    }
+  }
+  return userUrls;
+};
 
 
 
@@ -89,7 +99,7 @@ app.get("/urls", (req, res) => {
   // const username = req.cookies["user_ID"]
   let templateVars = {
     user: users[req.cookies["user_id"]],
-    urls: urlDatabase
+    urls: urlsForUser(req.cookies["user_id"]),
   };
 
   res.render("urls_index", templateVars);
@@ -115,9 +125,10 @@ app.get("/urls/:shortURL", (req, res) => {
     // username, 
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
+    urlUserID: urlDatabase[req.params.shortURL].userID,
     user: users[req.cookies["user_id"]],
   };
-
+  console.log(templateVars);
   res.render("urls_show", templateVars);
 });
 
