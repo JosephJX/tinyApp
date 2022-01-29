@@ -154,9 +154,9 @@ app.post("/register", (req, res) => {
     users[newUserID] = {
       id: newUserID,
       email: submittedEmail,
-      password: bcrypt.hashSync(submittedPassword, 10),
+      password: bcryptjs.hashSync(submittedPassword, 10),
     };
-    res.session('user_id', newUserID);
+    req.session.user_id = newUserID;
     res.redirect("/urls");
   }
 });
@@ -169,10 +169,10 @@ app.post("/login", (req, res) => {
     res.status(403).send("There is no account associated with this email address");
   } else {
     const userID = userIdFromEmail(email, users);
-    if (!bcrypt.compareSync(password, users[userID].password)) {
+    if (!bcryptjs.compareSync(password, users[userID].password)) {
       res.status(403).send("The password you entered does not match the one associated with the provided email address");
     } else {
-      res.session('user_id', userID);
+      res.session.user_id = userID;
       res.redirect("/urls");
     }
   }
