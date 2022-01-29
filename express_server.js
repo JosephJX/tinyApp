@@ -1,7 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
-const bcrypt = require("bcrypt");
+const bcryptjs = require("bcryptjs");
 const req = require("express/lib/request");
 const { use } = require("express/lib/application");
 const app = express();
@@ -104,10 +104,6 @@ app.get("/u/:shortURL", (req, res) => {
   }
 });
 
-
-
-
-
 app.post("/urls", (req, res) => {
   if (req.session.user_id) {
     const shortURL = generateRandomString();
@@ -135,7 +131,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 app.post("/urls/:id", (req, res) => {
   const userID = req.session["user_id"];
-  const userUrls = urlsForUser(userID), urlDatabase;
+  const userUrls = urlsForUser(userID, urlDatabase);
   if (Object.keys(userUrls).includes(req.params.id)) {
     const shortURL = req.params.id;
     urlDatabase[shortURL].longURL = req.body.newURL;
