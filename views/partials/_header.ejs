@@ -10,7 +10,7 @@
       aria-expanded="false"
       aria-label="Toggle navigation"
     >
-    <span class="navbar-toggler-icon"></span>
+      <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
@@ -29,15 +29,22 @@
           color: darkslategrey;
         "
         class="btn btn-primary"
-      >Logout</button>
+      >
+        Logout
+      </button>
     </form>
     <% } else { %>
-      <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
-        <div class="navbar-nav">
-          <a class="nav-item nav-link" href="/login" style="margin: 1em">Login</a>
-          <a class="nav-item nav-link" href="register" style:"margin: 1em">Register</a>
-        </div>    
+    <div
+      class="collapse navbar-collapse justify-content-end"
+      id="navbarNavAltMarkup"
+    >
+      <div class="navbar-nav">
+        <a class="nav-item nav-link" href="/login" style="margin: 1em">Login</a>
+        <a class="nav-item nav-link" href="register" style="margin: 1em"
+          >Register</a
+        >
       </div>
+    </div>
     <% } %>
   </nav>
 </header>
