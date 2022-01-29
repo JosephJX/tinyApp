@@ -14,8 +14,6 @@ const generateRandomString = () => {
   return generateString(6)
 }
 
-console.log(generateRandomString())
-
 // checks if email matches a user in the database
 const emailHasUser = (email, userDatabase) => {
   for (const user in userDatabase) {
