@@ -42,7 +42,6 @@ const userAlreadyExists = (email) => {
 const emailAlreadyExists = (email) => {
   for (const user in users) {
     if (users[user].email === email) {
-      return true
       return users[user].id
     }
   } return false;
@@ -96,7 +95,6 @@ app.get("/urls", (req, res) => {
     user: users[req.cookies["user_id"]],
     urls: urlsForUser(req.cookies["user_id"]),
   };
-
   res.render("urls_index", templateVars);
 });
 
@@ -150,7 +148,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     delete urlDatabase[shortURL];
     res.redirect('/urls');
   } else {
-    res.send(401);
+    res.status(401);
   }
 });
 
@@ -166,14 +164,14 @@ app.post("/urls/:id", (req, res) => {
     urlDatabase[shortURL].longURL = req.body.newURL;
     res.redirect('/urls');
   } else {
-    res.send(401);
+    res.status(401);
   }
 });
 
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
   if (longURL === undefined) {
-    res.send(302);
+    res.status(302);
   } else {
     res.redirect(longURL);
   }
@@ -193,11 +191,11 @@ app.post("/register", (req, res) => {
   const submittedPassword = req.body.password;
 
   if (!submittedEmail || !submittedPassword) {
-    res.send(400, "Please include both a valid email and password");
+    res.status(400).send("Please include both a valid email and password");
   };
 
   if (userAlreadyExists(submittedEmail)) {
-    res.send(400, "An account already exists for this email address");
+    res.status(400).send("An account already exists for this email address");
   };
 
   const newUserID = generateRandomString();
@@ -225,11 +223,11 @@ app.post("/login", (req, res) => {
   const password = req.body.password;
 
   if (!emailAlreadyExists(email)) {
-    res.send(403, "There is no account associated with this email address");
+    res.status(403).send("There is no account associated with this email address");
   } else {
     const userID = emailAlreadyExists(email);
     if (!bcrypt.compareSync(password, users[userID].password)) {
-      res.send(403, "The password you entered does not match the one associated with the provided email address");
+      res.status(403).send("The password you entered does not match the one associated with the provided email address");
     } else {
       res.cookie('user_id', userID);
       res.redirect("/urls");
