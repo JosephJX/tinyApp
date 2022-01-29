@@ -1,111 +1,87 @@
 const express = require("express");
-const app = express();
-const PORT = 8080;
-const bcrypt = require("bcrypt");
-app.set("view engine", "ejs");
-
-
 const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
 const req = require("express/lib/request");
 const { use } = require("express/lib/application");
+const app = express();
+const PORT = 8080;
+const bcrypt = require("bcrypt");
+
+const { generateRandomString, emailHasUser, userIdFromEmail, urlsForUser, cookieHasUser } = require("./helpers");
+
+//object with the short and long URLs
+const urlDatabase = {};
+
+// object with all the users data
+const users = {};
+
+app.set("view engine", "ejs");
+
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cookieSession({
   name: "session",
   keys: ["Joseph"],
   maxAge: 24 * 60 * 60 * 1000,
 }));
+// const generateRandomString = () => {
 
-app.use(bodyParser.urlencoded({ extended: true }));
+//   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-function generateRandomString() {
+//   function generateString(length) {
+//     let result = ' ';
+//     const charactersLength = characters.length;
+//     for (let i = 0; i < length; i++) {
+//       result += characters.charAt(Math.floor(Math.random() * charactersLength));
+//     }
+//     return result;
+//   }
+//   return generateString(6)
+// }
 
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+// console.log(generateRandomString())
 
-  function generateString(length) {
-    let result = ' ';
-    const charactersLength = characters.length;
-    for (let i = 0; i < length; i++) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    return result;
-  }
-  return generateString(6)
-}
+// // checks if email matches a user in the database
+// const emailHasUser = (email, userDatabase) => {
+//   for (const user in userDatabase) {
+//     if (userDatabase[user].email === email) {
+//       return true;
+//     }
+//   }
+//   return false;
+// };
 
-console.log(generateRandomString())
+// // takes an email and checks the database, returns the corresponding user id
+// const userIdFromEmail = (email, userDatabase) => {
+//   for (const user in userDatabase) {
+//     if (userDatabase[user].email === email) {
+//       return userDatabase[user].id;
+//     }
+//   }
+// };
 
-const userAlreadyExists = (email) => {
-  for (const user in users) {
-    if (users[user].email === email) {
-      return true
-    }
-  } return false;
-};
+// // returns an object of shorturls specfic to the given user id
+// const urlsForUser = (id, urlDatabase) => {
+//   const userUrls = {};
+//   for (const shortURL in urlDatabase) {
+//     if (urlDatabase[shortURL].userID === id) {
+//       userUrls[shortURL] = urlDatabase[shortURL];
+//     }
+//   }
+//   return userUrls;
+// };
 
-const emailHasUser = function (email, userDatabase) {
-  for (const user in userDatabase) {
-    if (userDatabase[user].email === email) {
-      return true;
-    }
-  }
-  return false;
-};
-
-const userIdFromEmail = function (email, userDatabase) {
-  for (const user in userDatabase) {
-    if (userDatabase[user].email === email) {
-      return userDatabase[user].id;
-    }
-  }
-};
-
-
-
-const urlsForUser = (id) => {
-  const userUrls = {};
-  for (const shortURL in urlDatabase) {
-    if (urlDatabase[shortURL].userID === id) {
-      userUrls[shortURL] = urlDatabase[shortURL];
-    }
-  }
-  return userUrls;
-};
-
-//checks if current cookie matches user in Database
-
-const cookieHasUser = function (cookie, userDatabase) {
-  for (const user in userDatabase) {
-    if (cookie === user) {
-      return true;
-    }
-  } return false;
-}
-
-
-//object with the short and long URLs
-const urlDatabase = {
-  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID" },
-  // "9sm5xK": { longURL: "http://www.google.com", userID: "userRandomID" },
-};
-
-// object with all the users data
-const users = {
-  // "userRandomID": {
-  //   id: "userRandomID",
-  //   email: "user@example.com",
-  //   password: "purple-monkey-dinosaur"
-  // },
-  // "user2RandomID": {
-  //   id: "user2RandomID",
-  //   email: "user2@example.com",
-  //   password: "dishwasher-funk"
-  // }
-}
-
+// //checks if current cookie matches user in Database
+// const cookieHasUser = function (cookie, userDatabase) {
+//   for (const user in userDatabase) {
+//     if (cookie === user) {
+//       return true;
+//     }
+//   } return false;
+// }
 app.get("/", (req, res) => {
   res.send("Hello!");
-  if (req.session.user_id) {
+  if (cookieHasUser(req.session.user_id, users)) {
     res.redirect("/urls");
   } else {
     res.redirect("/login");
@@ -116,14 +92,10 @@ app.get("/", (req, res) => {
 //   res.json(urlDatabase);
 // });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
 app.get("/urls", (req, res) => {
   let templateVars = {
     user: users[req.session["user_id"]],
-    urls: urlsForUser(req.session["user_id"]),
+    urls: urlsForUser(req.session.user_id, urlDatabase),
   };
   res.render("urls_index", templateVars);
 });
@@ -156,43 +128,6 @@ app.get("/urls/:shortURL", (req, res) => {
   }
 });
 
-app.post("/urls", (req, res) => {
-  if (req.session.user_id) {
-    const shortURL = generateRandomString();
-    urlDatabase[shortURL] = {
-      longURL: req.body.longURL,
-      userID: req.session.user_id,
-    };
-    res.redirect(`/urls/${shortURL}`);
-  } else {
-    res.status(401).send("You must be logged in to a valid account to create short URLs.")
-  }
-});
-
-app.post("/urls/:shortURL/delete", (req, res) => {
-  const userID = req.session["user_id"];
-  const userUrls = urlsForUser(userID);
-  if (Object.keys(userUrls).includes(req.params.shortURL)) {
-    const shortURL = req.params.shortURL;
-    delete urlDatabase[shortURL];
-    res.redirect('/urls');
-  } else {
-    res.status(401).send("You do not have authorization to delete this short URL.");
-  }
-});
-
-app.post("/urls/:id", (req, res) => {
-  const userID = req.session["user_id"];
-  const userUrls = urlsForUser(userID);
-  if (Object.keys(userUrls).includes(req.params.id)) {
-    const shortURL = req.params.id;
-    urlDatabase[shortURL].longURL = req.body.newURL;
-    res.redirect('/urls');
-  } else {
-    res.status(401).send("You do not have authorization to edit this short URL.");
-  }
-});
-
 app.get("/u/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
     const longURL = urlDatabase[req.params.shortURL].longURL;
@@ -218,6 +153,45 @@ app.get("/register", (req, res) => {
     res.render("urls_registration", templateVars);
   }
 });
+
+app.post("/urls", (req, res) => {
+  if (req.session.user_id) {
+    const shortURL = generateRandomString();
+    urlDatabase[shortURL] = {
+      longURL: req.body.longURL,
+      userID: req.session.user_id,
+    };
+    res.redirect(`/urls/${shortURL}`);
+  } else {
+    res.status(401).send("You must be logged in to a valid account to create short URLs.")
+  }
+});
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const userID = req.session["user_id"];
+  const userUrls = urlsForUser(userID, urlDatabase);
+  if (Object.keys(userUrls).includes(req.params.shortURL)) {
+    const shortURL = req.params.shortURL;
+    delete urlDatabase[shortURL];
+    res.redirect('/urls');
+  } else {
+    res.status(401).send("You do not have authorization to delete this short URL.");
+  }
+});
+
+app.post("/urls/:id", (req, res) => {
+  const userID = req.session["user_id"];
+  const userUrls = urlsForUser(userID), urlDatabase;
+  if (Object.keys(userUrls).includes(req.params.id)) {
+    const shortURL = req.params.id;
+    urlDatabase[shortURL].longURL = req.body.newURL;
+    res.redirect('/urls');
+  } else {
+    res.status(401).send("You do not have authorization to edit this short URL.");
+  }
+});
+
+
 
 app.post("/register", (req, res) => {
   const submittedEmail = req.body.email;
