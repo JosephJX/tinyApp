@@ -193,7 +193,8 @@ app.post("/login", (req, res) => {
       res.cookie('user_id', userID);
       res.redirect("/urls");
     }
-  });
+  }
+});
 
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
