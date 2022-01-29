@@ -6,11 +6,15 @@ app.set("view engine", "ejs");
 
 
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser")
+const cookieSession = require("cookie-session");
 const req = require("express/lib/request");
 const { use } = require("express/lib/application");
 
-app.use(cookieParser())
+app.use(cookieSession({
+  name: "session",
+  keys: ["Joseph"],
+  maxAge: 24 * 60 * 60 * 1000,
+}));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -92,8 +96,8 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   // const username = req.cookies["user_ID"]
   let templateVars = {
-    user: users[req.cookies["user_id"]],
-    urls: urlsForUser(req.cookies["user_id"]),
+    user: users[req.session["user_id"]],
+    urls: urlsForUser(req.session["user_id"]),
   };
   res.render("urls_index", templateVars);
 });
@@ -103,11 +107,11 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   // const username = req.cookies["username"]
-  if (!req.cookies["user_id"]) {
+  if (!req.session["user_id"]) {
     res.redirect("/login");
   } else {
     let templateVars = {
-      user: users[req.cookies["user_id"]]
+      user: users[req.session["user_id"]]
     };
     res.render("urls_new", templateVars);
   }
@@ -120,7 +124,7 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
     urlUserID: urlDatabase[req.params.shortURL].userID,
-    user: users[req.cookies["user_id"]],
+    user: users[req.session["user_id"]],
   };
   console.log(templateVars);
   res.render("urls_show", templateVars);
@@ -130,7 +134,7 @@ app.post("/urls", (req, res) => {
   const shortURL = generateRandomString(6)
   urlDatabase[shortURL] = {
     longURL: req.body.longURL,
-    userID: req.cookies["user_id"],
+    userID: req.session["user_id"],
   };
   res.redirect(`/urls/${shortURL}`)
   // console.log(req.body);  // Log the POST request body to the console
@@ -141,7 +145,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   // const shortURL = req.params.shortURL
   // delete urlDatabase[shortURL]
   // res.redirect("/urls")
-  const userID = req.cookies["user_id"];
+  const userID = req.session["user_id"];
   const userUrls = urlsForUser(userID);
   if (Object.keys(userUrls).includes(req.params.shortURL)) {
     const shortURL = req.params.shortURL;
@@ -157,7 +161,7 @@ app.post("/urls/:id", (req, res) => {
   // const longURL = req.body.longURL
   // urlDatabase[shortURL] = longURL
   // res.redirect("/urls")
-  const userID = req.cookies["user_id"];
+  const userID = req.session["user_id"];
   const userUrls = urlsForUser(userID);
   if (Object.keys(userUrls).includes(req.params.id)) {
     const shortURL = req.params.id;
@@ -181,7 +185,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.get("/register", (req, res) => {
   let templateVars = {
-    user: users[req.cookies["user_id"]],
+    user: users[req.session["user_id"]],
   };
   res.render("urls_registration", templateVars)
 });
@@ -204,13 +208,13 @@ app.post("/register", (req, res) => {
     email: submittedEmail,
     password: bcrypt.hashSync(submittedPassword, 10),
   };
-  res.cookie('user_id', newUserID);
+  res.session('user_id', newUserID);
   res.redirect("/urls");
 });
 
 app.get("/login", (req, res) => {
   let templateVars = {
-    user: users[req.cookies["user_id"]],
+    user: users[req.session["user_id"]],
   };
   res.render("urls_login", templateVars);
 });
@@ -229,14 +233,14 @@ app.post("/login", (req, res) => {
     if (!bcrypt.compareSync(password, users[userID].password)) {
       res.status(403).send("The password you entered does not match the one associated with the provided email address");
     } else {
-      res.cookie('user_id', userID);
+      res.session('user_id', userID);
       res.redirect("/urls");
     }
   }
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect("/urls");
 });
 
