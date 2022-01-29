@@ -1,19 +1,18 @@
 const express = require("express");
 const app = express();
 const PORT = 8080;
+const bcrypt = require("bcrypt");
 app.set("view engine", "ejs");
 
 
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser")
 const req = require("express/lib/request");
+const { use } = require("express/lib/application");
 
 app.use(cookieParser())
 
-
 app.use(bodyParser.urlencoded({ extended: true }));
-
-
 
 function generateRandomString() {
 
@@ -25,10 +24,8 @@ function generateRandomString() {
     for (let i = 0; i < length; i++) {
       result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
-
     return result;
   }
-
   return generateString(6)
 }
 
@@ -61,26 +58,24 @@ const urlsForUser = (id) => {
   return userUrls;
 };
 
-
-
 //object with the short and long URLs
 const urlDatabase = {
-  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID" },
-  "9sm5xK": { longURL: "http://www.google.com", userID: "userRandomID" },
+  // "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID" },
+  // "9sm5xK": { longURL: "http://www.google.com", userID: "userRandomID" },
 };
 
 // object with all the users data
 const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur"
-  },
-  "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk"
-  }
+  // "userRandomID": {
+  //   id: "userRandomID",
+  //   email: "user@example.com",
+  //   password: "purple-monkey-dinosaur"
+  // },
+  // "user2RandomID": {
+  //   id: "user2RandomID",
+  //   email: "user2@example.com",
+  //   password: "dishwasher-funk"
+  // }
 }
 
 app.get("/", (req, res) => {
@@ -209,7 +204,7 @@ app.post("/register", (req, res) => {
   users[newUserID] = {
     id: newUserID,
     email: submittedEmail,
-    password: submittedPassword
+    password: bcrypt.hashSync(submittedPassword, 10),
   };
   res.cookie('user_id', newUserID);
   res.redirect("/urls");
@@ -233,7 +228,7 @@ app.post("/login", (req, res) => {
     res.send(403, "There is no account associated with this email address");
   } else {
     const userID = emailAlreadyExists(email);
-    if (users[userID].password !== password) {
+    if (!bcrypt.compareSync(password, users[userID].password)) {
       res.send(403, "The password you entered does not match the one associated with the provided email address");
     } else {
       res.cookie('user_id', userID);
