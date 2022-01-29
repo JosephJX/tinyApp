@@ -42,6 +42,17 @@ const userAlreadyExists = (email) => {
   } return false;
 };
 
+const emailAlreadyExists = function (email) {
+  for (const user in users) {
+    if (users[user].email === email) {
+      return true
+      return users[user].id
+    }
+  } return false;
+}
+
+
+
 //object with the short and long URLs
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -131,7 +142,7 @@ app.post("/urls/:id", (req, res) => {
 
 app.get("/register", (req, res) => {
   let templateVars = {
-    user: users[req.cookies["username"]],
+    user: users[req.cookies["user_id"]],
   };
   res.render("urls_registration", templateVars)
 });
@@ -160,19 +171,32 @@ app.post("/register", (req, res) => {
 
 app.get("/login", (req, res) => {
   let templateVars = {
-    user: users[req.cookies["username"]],
+    user: users[req.cookies["user_id"]],
   };
-  res.render("urls_login", templateVars)
+  res.render("urls_login", templateVars);
 });
 
 app.post("/login", (req, res) => {
-  const username = req.body.username;
-  res.cookie("username", username)
-  res.redirect("/urls")
-});
+  // const username = req.body.username;
+  // res.cookie("username", username)
+  // res.redirect("/urls")
+  const email = req.body.email;
+  const password = req.body.password;
+
+  if (!emailAlreadyExists(email)) {
+    res.send(403, "There is no account associated with this email address");
+  } else {
+    const userID = emailAlreadyExists(email);
+    if (users[userID].password !== password) {
+      res.send(403, "The password you entered does not match the one associated with the provided email address");
+    } else {
+      res.cookie('user_id', userID);
+      res.redirect("/urls");
+    }
+  });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect("/urls");
 });
 
