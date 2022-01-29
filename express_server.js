@@ -110,11 +110,12 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   // const username = req.cookies["username"]
-  let templateVars = {
-    user: users[req.cookies["user_id"]]
-  }; if (!req.cookies["user_id"]) {
+  if (!req.cookies["user_id"]) {
     res.redirect("/login");
   } else {
+    let templateVars = {
+      user: users[req.cookies["user_id"]]
+    };
     res.render("urls_new", templateVars);
   }
 });
