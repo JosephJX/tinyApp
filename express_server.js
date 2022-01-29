@@ -43,13 +43,24 @@ const userAlreadyExists = (email) => {
   } return false;
 };
 
-const emailAlreadyExists = (email) => {
-  for (const user in users) {
-    if (users[user].email === email) {
-      return users[user].id
+const emailHasUser = function (email, userDatabase) {
+  for (const user in userDatabase) {
+    if (userDatabase[user].email === email) {
+      return true;
     }
-  } return false;
-}
+  }
+  return false;
+};
+
+const userIdFromEmail = function (email, userDatabase) {
+  for (const user in userDatabase) {
+    if (userDatabase[user].email === email) {
+      return userDatabase[user].id;
+    }
+  }
+};
+
+
 
 const urlsForUser = (id) => {
   const userUrls = {};
@@ -60,6 +71,17 @@ const urlsForUser = (id) => {
   }
   return userUrls;
 };
+
+//checks if current cookie matches user in Database
+
+const cookieHasUser = function (cookie, userDatabase) {
+  for (const user in userDatabase) {
+    if (cookie === user) {
+      return true;
+    }
+  } return false;
+}
+
 
 //object with the short and long URLs
 const urlDatabase = {
@@ -99,7 +121,6 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  // const username = req.cookies["user_ID"]
   let templateVars = {
     user: users[req.session["user_id"]],
     urls: urlsForUser(req.session["user_id"]),
@@ -111,8 +132,7 @@ app.get("/urls", (req, res) => {
 // if not, the will be redirected back to the login page
 
 app.get("/urls/new", (req, res) => {
-  // const username = req.cookies["username"]
-  if (!req.session["user_id"]) {
+  if (!cookieHasUser(req.session.user_id, users)) {
     res.redirect("/login");
   } else {
     let templateVars = {
@@ -147,14 +167,9 @@ app.post("/urls", (req, res) => {
   } else {
     res.status(401).send("You must be logged in to a valid account to create short URLs.")
   }
-  // console.log(req.body);  // Log the POST request body to the console
-  // res.send("Ok");   
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  // const shortURL = req.params.shortURL
-  // delete urlDatabase[shortURL]
-  // res.redirect("/urls")
   const userID = req.session["user_id"];
   const userUrls = urlsForUser(userID);
   if (Object.keys(userUrls).includes(req.params.shortURL)) {
@@ -167,10 +182,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  // const shortURL = req.params.id
-  // const longURL = req.body.longURL
-  // urlDatabase[shortURL] = longURL
-  // res.redirect("/urls")
   const userID = req.session["user_id"];
   const userUrls = urlsForUser(userID);
   if (Object.keys(userUrls).includes(req.params.id)) {
@@ -191,14 +202,14 @@ app.get("/u/:shortURL", (req, res) => {
       res.redirect(longURL)
     }
   } else {
-    res.status(404).send("The short URL are trying to access does not correspond with a long URL at this time.")
+    res.status(404).send("The short URL you are trying to access does not correspond with a long URL at this time.")
   }
 });
 
 // use this template for registration form 
 
 app.get("/register", (req, res) => {
-  if (req.session.user_id) {
+  if (cookieHasUser(req.session.user_id, users)) {
     res.redirect("/urls");
   } else {
     let templateVars = {
@@ -214,24 +225,22 @@ app.post("/register", (req, res) => {
 
   if (!submittedEmail || !submittedPassword) {
     res.status(400).send("Please include both a valid email and password");
-  };
-
-  if (userAlreadyExists(submittedEmail)) {
+  } else if (emailHasUser(submittedEmail, users)) {
     res.status(400).send("An account already exists for this email address");
-  };
-
-  const newUserID = generateRandomString();
-  users[newUserID] = {
-    id: newUserID,
-    email: submittedEmail,
-    password: bcrypt.hashSync(submittedPassword, 10),
-  };
-  res.session('user_id', newUserID);
-  res.redirect("/urls");
+  } else {
+    const newUserID = generateRandomString();
+    users[newUserID] = {
+      id: newUserID,
+      email: submittedEmail,
+      password: bcrypt.hashSync(submittedPassword, 10),
+    };
+    res.session('user_id', newUserID);
+    res.redirect("/urls");
+  }
 });
 
 app.get("/login", (req, res) => {
-  if (req.session.user_id) {
+  if (cookieHasUser(req.session.user_id, users)) {
     res.redirect("/urls");
   } else {
     let templateVars = {
@@ -242,16 +251,13 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  // const username = req.body.username;
-  // res.cookie("username", username)
-  // res.redirect("/urls")
   const email = req.body.email;
   const password = req.body.password;
 
-  if (!emailAlreadyExists(email)) {
+  if (!emailHasUser(email, users)) {
     res.status(403).send("There is no account associated with this email address");
   } else {
-    const userID = emailAlreadyExists(email);
+    const userID = userIdFromEmail(email, users);
     if (!bcrypt.compareSync(password, users[userID].password)) {
       res.status(403).send("The password you entered does not match the one associated with the provided email address");
     } else {
