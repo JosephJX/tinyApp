@@ -144,16 +144,34 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const shortURL = req.params.shortURL
-  delete urlDatabase[shortURL]
-  res.redirect("/urls")
+  // const shortURL = req.params.shortURL
+  // delete urlDatabase[shortURL]
+  // res.redirect("/urls")
+  const userID = req.cookies["user_id"];
+  const userUrls = urlsForUser(userID);
+  if (Object.keys(userUrls).includes(req.params.shortURL)) {
+    const shortURL = req.params.shortURL;
+    delete urlDatabase[shortURL];
+    res.redirect('/urls');
+  } else {
+    res.send(401);
+  }
 });
 
 app.post("/urls/:id", (req, res) => {
-  const shortURL = req.params.id
-  const longURL = req.body.longURL
-  urlDatabase[shortURL] = longURL
-  res.redirect("/urls")
+  // const shortURL = req.params.id
+  // const longURL = req.body.longURL
+  // urlDatabase[shortURL] = longURL
+  // res.redirect("/urls")
+  const userID = req.cookies["user_id"];
+  const userUrls = urlsForUser(userID);
+  if (Object.keys(userUrls).includes(req.params.id)) {
+    const shortURL = req.params.id;
+    urlDatabase[shortURL].longURL = req.body.newURL;
+    res.redirect('/urls');
+  } else {
+    res.send(401);
+  }
 });
 
 app.get("/u/:shortURL", (req, res) => {
