@@ -9,11 +9,7 @@ const PORT = 8080;
 
 const { generateRandomString, emailHasUser, userIdFromEmail, urlsForUser, cookieHasUser } = require("./helpers");
 
-//object with the short and long URLs
-const urlDatabase = {};
-
-// object with all the users data
-const users = {};
+const { urlDatabase, users } = require("./databases.js");
 
 app.set("view engine", "ejs");
 
