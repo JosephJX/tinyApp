@@ -19,7 +19,6 @@ const emailHasUser = (email, userDatabase) => {
       return true;
     }
   }
-  return false;
 };
 
 // takes an email and checks the database, returns the corresponding user id
