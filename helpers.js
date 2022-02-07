@@ -56,5 +56,5 @@ module.exports = {
   emailHasUser,
   userIdFromEmail,
   urlsForUser,
-  cookieHasUser
+  cookieHasUser,
 };
