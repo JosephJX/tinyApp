@@ -1,8 +1,6 @@
 /* Generates a random string, used for creating short URLs and userIDs */
 const generateRandomString = () => {
 
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
   function generateString(length) {
     let result = ' ';
     const charactersLength = characters.length;
@@ -12,7 +10,7 @@ const generateRandomString = () => {
     return result;
   }
   return generateString(6)
-}
+};
 
 // checks if email matches a user in the database
 const emailHasUser = (email, userDatabase) => {
@@ -50,7 +48,7 @@ const cookieHasUser = (cookie, userDatabase) => {
     if (cookie === user) {
       return true;
     }
-  } return false;
+  }
 };
 
 module.exports = {
