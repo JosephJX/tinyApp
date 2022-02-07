@@ -172,7 +172,7 @@ app.post("/login", (req, res) => {
     if (!bcryptjs.compareSync(password, users[userID].password)) {
       res.status(403).send("The password you entered does not match the one associated with the provided email address");
     } else {
-      res.session.user_id = userID;
+      res.session.user_id = newUserID;
       res.redirect("/urls");
     }
   }
