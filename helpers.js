@@ -1,15 +1,12 @@
 /* Generates a random string, used for creating short URLs and userIDs */
 const generateRandomString = () => {
-
-  function generateString(length) {
-    let result = ' ';
-    const charactersLength = characters.length;
-    for (let i = 0; i < length; i++) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    return result;
+  let randomString = "";
+  for (let i = 0; i < 6; i++) {
+    const randomCharCode = Math.floor(Math.random() * 26 + 97);
+    const randomChar = String.fromCharCode(randomCharCode);
+    randomString += randomChar;
   }
-  return generateString(6)
+  return randomString;
 };
 
 // checks if email matches a user in the database
