@@ -25,7 +25,6 @@ app.use(cookieSession({
 
 //GETS:
 app.get("/", (req, res) => {
-  res.send("Hello!");
   if (cookieHasUser(req.session.user_id, users)) {
     res.redirect("/urls");
   } else {
@@ -34,6 +33,9 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+  if (!cookieHasUser(req.session.user_id, users)) {
+    res.redirect("/login")
+  };
   let templateVars = {
     user: users[req.session["user_id"]],
     urls: urlsForUser(req.session.user_id, urlDatabase),
@@ -67,13 +69,16 @@ app.get("/login", (req, res) => {
   if (cookieHasUser(req.session.user_id, users)) {
     res.redirect("/urls");
   } else {
-    let templateVars = { display: users[req.session.user_id], urls: urlDatabase };
+    let templateVars = { user: users[req.session.user_id], urls: urlDatabase };
     res.render("urls_login", templateVars);
   }
 });
 
 /* Responds to '/urls/:shortURL' GET request with rendered HTML of urls_show.ejs with data specific to :shortURL */
 app.get("/urls/:shortURL", (req, res) => {
+  if (!cookieHasUser(req.session.user_id, users)) {
+    res.redirect("/login");
+  }
   if (urlDatabase[req.params.shortURL]) {
     let templateVars = {
       shortURL: req.params.shortURL,
@@ -94,7 +99,7 @@ app.get("/u/:shortURL", (req, res) => {
     if (longURL === undefined) {
       res.status(302);
     } else {
-      res.redirect(longURL)
+      res.redirect(`https://${longURL}`)
     }
   } else {
     res.status(404).send("The short URL you are trying to access does not correspond with a long URL at this time.")
@@ -172,12 +177,12 @@ app.post("/login", (req, res) => {
     res.status(403).send("There is no account associated with this email address");
   } else {
     const userID = userIdFromEmail(email, users);
+
     if (!bcryptjs.compareSync(password, users[userID].password)) {
       res.status(403).send("The password you entered does not match the one associated with the provided email address");
     }
-    res.session.user_id = newUserID;
+    req.session.user_id = userID;
     res.redirect("/urls");
-
   }
 });
 
