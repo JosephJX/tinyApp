@@ -24,6 +24,8 @@ app.use(cookieSession({
 // ROUTES
 
 //GETS:
+
+//sends user to the login page if not logged in. Sends user to their urls if they are registered in the database
 app.get("/", (req, res) => {
   if (cookieHasUser(req.session.user_id, users)) {
     res.redirect("/urls");
