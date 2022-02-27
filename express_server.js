@@ -96,16 +96,11 @@ app.get("/urls/:shortURL", (req, res) => {
 
 /* Responds to '/u/:shortURL' GET request by redirecting to the corresponding long URL, from the urlDatabase */
 app.get("/u/:shortURL", (req, res) => {
-  if (urlDatabase[req.params.shortURL]) {
-    const longURL = urlDatabase[req.params.shortURL].longURL;
-    if (longURL === undefined) {
-      res.status(302);
-    } else {
-      res.redirect(`https://${longURL}`)
-    }
-  } else {
-    res.status(404).send("The short URL you are trying to access does not correspond with a long URL at this time.")
+  if (!urlDatabase[req.params.shortURL]) {
+    return res.status(404).send("The short URL you are trying to access does not correspond with a long URL at this time.")
   }
+  const longURL = urlDatabase[req.params.shortURL].longURL;
+  res.redirect(`https://${longURL}`)
 });
 
 //POSTS:
