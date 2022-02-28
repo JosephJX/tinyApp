@@ -100,7 +100,7 @@ app.get("/u/:shortURL", (req, res) => {
     return res.status(404).send("The short URL you are trying to access does not correspond with a long URL at this time.")
   }
   const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(`https://${longURL}`)
+  res.redirect(`${longURL}`)
 });
 
 //POSTS:
